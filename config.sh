@@ -227,6 +227,10 @@ ln -sf /var/lib/cni/bin /opt/cni/bin
 # Enable CRI-O and kubelet services (but don't start them)
 systemctl enable crio.service
 systemctl enable kubelet.service
+
+# clean up cni files which will cause us issues
+rm -f /etc/cni/net.d/100-crio-bridge.conflist
+rm -f /etc/cni/net.d/200-loopback.conflist
 fi
 
 if [[ "$kiwi_profiles" == *"Vagrant"* ]]; then
