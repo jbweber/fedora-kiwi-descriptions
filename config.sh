@@ -192,6 +192,45 @@ ethernet.mtu = 1460
 EOF
 fi
 
+if [[ "$kiwi_profiles" == *"K8s"* ]]; then
+# Configure kernel modules for Kubernetes
+cat > /etc/modules-load.d/k8s.conf <<EOF
+overlay
+br_netfilter
+EOF
+
+# Configure sysctl settings for Kubernetes networking
+cat > /etc/sysctl.d/k8s.conf <<EOF
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+# Configure CRI-O CNI paths
+mkdir -p /etc/crio/crio.conf.d
+cat > /etc/crio/crio.conf.d/01-cni-paths.conf <<EOF
+[crio.network]
+network_dir = "/etc/cni/net.d"
+plugin_dirs = [
+    "/var/lib/cni/bin",
+    "/usr/libexec/cni",
+]
+EOF
+
+# Create directory structure for CNI and kubelet
+mkdir -p /var/lib/cni/bin
+mkdir -p /etc/cni/net.d
+mkdir -p /var/lib/kubelet/volumeplugins
+
+# Create symlink for compatibility with tools expecting /opt/cni/bin
+mkdir -p /opt/cni
+ln -sf /var/lib/cni/bin /opt/cni/bin
+
+# Enable CRI-O and kubelet services (but don't start them)
+systemctl enable crio.service
+systemctl enable kubelet.service
+fi
+
 if [[ "$kiwi_profiles" == *"Vagrant"* ]]; then
 sed -e 's/.*UseDNS.*/UseDNS no/' -i /etc/ssh/sshd_config
 mkdir -m 0700 -p ~vagrant/.ssh
