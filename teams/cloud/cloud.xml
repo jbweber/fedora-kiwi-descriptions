@@ -27,6 +27,12 @@
 		<profile name="Cloud-Base-Oracle" description="Oracle Cloud Base Guest Image">
 			<requires profile="Cloud-Base-Generic"/>
 		</profile>
+		<profile name="Cloud-Base-Generic-EXT4" description="Generic Base Guest Image with EXT4">
+			<requires profile="CloudCore"/>
+		</profile>
+		<profile name="Cloud-Base-K8s-EXT4" description="Kubernetes-Ready Base Guest Image with EXT4">
+			<requires profile="Cloud-Base-Generic-EXT4"/>
+		</profile>
 	</profiles>
 	<preferences profiles="Cloud-Base-Azure" arch="x86_64">
 		<type image="oem" format="vhd-fixed" formatoptions="force_size"
@@ -230,6 +236,21 @@
 			</oemconfig>
 		</type>
 	</preferences>
+	<preferences profiles="Cloud-Base-Generic-EXT4" arch="x86_64">
+		<type image="oem" format="qcow2"
+		      filesystem="ext4"
+		      kernelcmdline="no_timer_check console=tty1 console=ttyS0,115200n8 systemd.firstboot=off"
+		      devicepersistency="by-uuid"
+		      bootpartition="true" bootpartsize="2000" bootfilesystem="ext4" efipartsize="100" firmware="uefi"
+		      rootfs_label="fedora"
+		      >
+			<bootloader name="grub2" bls="true" console="serial" timeout="0"/>
+			<size unit="G">5</size>
+			<oemconfig>
+				<oem-resize>false</oem-resize>
+			</oemconfig>
+		</type>
+	</preferences>
 	<preferences profiles="Cloud-Base-UEFI-UKI" arch="x86_64,aarch64,riscv64">
 		<type image="oem" format="qcow2"
 		      firmware="uefi" efipartsize="1000"
@@ -262,7 +283,6 @@
 		<ignore name="firewalld"/>
 		<ignore name="fwupd"/>
 		<ignore name="kernel"/>
-		<ignore name="*-firmware"/>
 		<ignore name="geolite2-city"/>
 		<ignore name="geolite2-country"/>
 		<ignore name="plymouth"/>
@@ -303,8 +323,29 @@
 	<packages type="image" patternType="plusRecommended" profiles="Cloud-Base-Generic">
 		<package name="qemu-guest-agent"/>
 	</packages>
+	<packages type="image" patternType="onlyRequired" profiles="Cloud-Base-Generic-EXT4">
+		<ignore name="criu*"/>
+		<ignore name="podman*"/>
+		<ignore name="qemu-user-static*"/>
+		<ignore name="sssd*"/>
+		<ignore name="zram-generator*"/>
+		<package name="e2fsprogs"/>
+		<package name="logrotate"/>
+		<package name="microcode_ctl"/>
+		<package name="qemu-guest-agent"/>
+	</packages>
 	<packages type="image" patternType="plusRecommended" profiles="Cloud-Base-UEFI-UKI">
 		<package name="qemu-guest-agent"/>
+	</packages>
+	<packages type="image" profiles="Cloud-Base-K8s-EXT4">
+		<package name="container-selinux"/>
+		<package name="containernetworking-plugins"/>
+		<package name="cri-o1.34"/>
+		<package name="cri-tools1.34"/>
+		<package name="iproute-tc"/>
+		<package name="kubernetes1.34"/>
+		<package name="kubernetes1.34-client"/>
+		<package name="kubernetes1.34-kubeadm"/>
 	</packages>
 	<packages type="uninstall" profiles="Cloud-Base-GCE">
 		<package name="cloud-init"/>
