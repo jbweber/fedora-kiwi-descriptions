@@ -231,6 +231,22 @@ systemctl enable kubelet.service
 # clean up cni files which will cause us issues
 rm -f /etc/cni/net.d/100-crio-bridge.conflist
 rm -f /etc/cni/net.d/200-loopback.conflist
+
+# Enable serial console auto-login for debugging
+mkdir -p /etc/systemd/system/serial-getty@ttyS0.service.d
+cat > /etc/systemd/system/serial-getty@ttyS0.service.d/autologin.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty -o '-p -f -- \\u' --autologin root --noclear --keep-baud 115200,57600,38400,9600 %I $TERM
+EOF
+
+# Also enable auto-login on regular console (tty1) for debugging
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat > /etc/systemd/system/getty@tty1.service.d/autologin.conf <<'EOF'
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty -o '-p -f -- \\u' --autologin root --noclear %I $TERM
+EOF
 fi
 
 if [[ "$kiwi_profiles" == *"Vagrant"* ]]; then
