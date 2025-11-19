@@ -206,24 +206,8 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward = 1
 EOF
 
-# Configure containerd with default config and CNI paths
-mkdir -p /etc/containerd
-
-# Check if default config exists from RPM, otherwise generate it
-if [ ! -f /etc/containerd/config.toml ]; then
-    # Generate default config if it doesn't exist
-    containerd config default > /etc/containerd/config.toml
-fi
-
-# Backup original config
-cp /etc/containerd/config.toml /etc/containerd/config.toml.orig
-
-# Add bin_dirs to CNI configuration (without modifying bin_dir)
-# This adds /usr/libexec/cni first, then /var/lib/cni/bin as additional search paths
-# Find the [plugins."io.containerd.*.cri*.cni] section and add bin_dirs after conf_dir
-sed -i \
-    -e '/conf_dir = /a\  bin_dirs = ["/usr/libexec/cni", "/var/lib/cni/bin"]' \
-    /etc/containerd/config.toml
+# Configure containerd CNI and kubelet paths
+# Note: containerd config.toml is provided via KIWI root overlay
 
 # Create directory structure for CNI and kubelet
 mkdir -p /var/lib/cni/bin

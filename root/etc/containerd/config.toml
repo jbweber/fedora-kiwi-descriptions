@@ -1,0 +1,15 @@
+version = 2
+
+# Minimal containerd configuration for Kubernetes
+# Using containerd v2 plugin paths
+
+[plugins]
+  [plugins.'io.containerd.cri.v1.runtime']
+    [plugins.'io.containerd.cri.v1.runtime'.cni]
+      # bin_dir is deprecated in v2, use bin_dirs
+      bin_dir = ""
+      # Search for CNI plugins in system location first, then writable location
+      bin_dirs = ["/usr/libexec/cni", "/var/lib/cni/bin"]
+      conf_dir = "/etc/cni/net.d"
+  [plugins."io.containerd.internal.v1.opt"]
+    path = "/var/lib/containerd/opt"
