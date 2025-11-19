@@ -206,16 +206,24 @@ net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward = 1
 EOF
 
-# Configure CRI-O CNI paths
-mkdir -p /etc/crio/crio.conf.d
-cat > /etc/crio/crio.conf.d/01-cni-paths.conf <<EOF
-[crio.network]
-network_dir = "/etc/cni/net.d"
-plugin_dirs = [
-    "/var/lib/cni/bin",
-    "/usr/libexec/cni",
-]
-EOF
+# Configure containerd with default config and CNI paths
+mkdir -p /etc/containerd
+
+# Check if default config exists from RPM, otherwise generate it
+if [ ! -f /etc/containerd/config.toml ]; then
+    # Generate default config if it doesn't exist
+    containerd config default > /etc/containerd/config.toml
+fi
+
+# Backup original config
+cp /etc/containerd/config.toml /etc/containerd/config.toml.orig
+
+# Add bin_dirs to CNI configuration (without modifying bin_dir)
+# This adds /usr/libexec/cni first, then /var/lib/cni/bin as additional search paths
+# Find the [plugins."io.containerd.*.cri*.cni] section and add bin_dirs after conf_dir
+sed -i \
+    -e '/conf_dir = /a\  bin_dirs = ["/usr/libexec/cni", "/var/lib/cni/bin"]' \
+    /etc/containerd/config.toml
 
 # Create directory structure for CNI and kubelet
 mkdir -p /var/lib/cni/bin
@@ -226,13 +234,9 @@ mkdir -p /var/lib/kubelet/volumeplugins
 mkdir -p /opt/cni
 ln -sf /var/lib/cni/bin /opt/cni/bin
 
-# Enable CRI-O and kubelet services (but don't start them)
-systemctl enable crio.service
+# Enable containerd and kubelet services (but don't start them)
+systemctl enable containerd.service
 systemctl enable kubelet.service
-
-# clean up cni files which will cause us issues
-rm -f /etc/cni/net.d/100-crio-bridge.conflist
-rm -f /etc/cni/net.d/200-loopback.conflist
 fi
 
 if [[ "$kiwi_profiles" == *"Vagrant"* ]]; then

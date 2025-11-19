@@ -155,14 +155,14 @@ qemu-system-x86_64 \
 **Includes:**
 - All Cloud-Base-Generic-EXT4 features (EXT4, hardware support, optimized packages)
 - **Kubernetes 1.34**: kubelet, kubeadm, kubectl
-- **CRI-O 1.34**: Container runtime
+- **containerd 1.34**: Container runtime
 - **Pre-configured** kernel modules, sysctl, CNI paths
-- **Enabled services**: CRI-O ready at boot
+- **Enabled services**: containerd ready at boot
 
 **Kubernetes Configuration (applied at build):**
 - Kernel modules: `overlay`, `br_netfilter` (`/etc/modules-load.d/k8s.conf`)
 - Sysctl: bridge netfilter, IP forwarding (`/etc/sysctl.d/k8s.conf`)
-- CRI-O CNI: `/etc/cni/net.d`, `/var/lib/cni/bin`, `/opt/cni/bin` symlink
+- containerd CNI: `/etc/cni/net.d`, `/var/lib/cni/bin`, `/opt/cni/bin` symlink
 - Kubelet volume plugins: `/var/lib/kubelet/volumeplugins`
 
 **Ready to deploy:** Just run `kubeadm init` after first boot!

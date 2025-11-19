@@ -340,7 +340,7 @@
 	<packages type="image" profiles="Cloud-Base-K8s-EXT4">
 		<package name="container-selinux"/>
 		<package name="containernetworking-plugins"/>
-		<package name="cri-o1.34"/>
+		<package name="containerd"/>
 		<package name="cri-tools1.34"/>
 		<package name="iproute-tc"/>
 		<package name="kubernetes1.34"/>
