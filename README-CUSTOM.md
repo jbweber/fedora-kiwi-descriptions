@@ -162,7 +162,10 @@ qemu-system-x86_64 \
 **Kubernetes Configuration (applied at build):**
 - Kernel modules: `overlay`, `br_netfilter` (`/etc/modules-load.d/k8s.conf`)
 - Sysctl: bridge netfilter, IP forwarding (`/etc/sysctl.d/k8s.conf`)
-- containerd CNI: `/etc/cni/net.d`, `/var/lib/cni/bin`, `/opt/cni/bin` symlink
+- containerd config: Custom config with CNI plugin paths (`/etc/containerd/config.toml`)
+  - CNI bin_dirs: `/usr/libexec/cni` (system), `/var/lib/cni/bin` (writable)
+  - CNI conf_dir: `/etc/cni/net.d`
+  - Symlink: `/opt/cni/bin` → `/var/lib/cni/bin` (compatibility)
 - Kubelet volume plugins: `/var/lib/kubelet/volumeplugins`
 
 **Ready to deploy:** Just run `kubeadm init` after first boot!
@@ -199,6 +202,25 @@ The Kubernetes configuration is based on:
 - **kubernetes-sigs/image-builder** - Official CAPI image builder patterns
 - **Fedora best practices** - Standard CNI paths (`/etc/cni/net.d`)
 - **bootc compatibility** - Writable `/var/lib/cni/bin` for additional plugins
+
+### Container Runtime: containerd
+
+We use **containerd** (instead of CRI-O) as the container runtime:
+
+**Configuration approach:**
+- Custom `/etc/containerd/config.toml` provided via KIWI root overlay (`root/etc/containerd/config.toml`)
+- Uses containerd v2 plugin paths: `plugins.'io.containerd.cri.v1.runtime'.cni`
+- Minimal config overrides only what's needed (containerd uses internal defaults for everything else)
+
+**CNI plugin paths:**
+- `/usr/libexec/cni` - System-provided immutable plugins (from `containernetworking-plugins` RPM)
+- `/var/lib/cni/bin` - Writable location for additional CNI plugins (e.g., Flannel, Calico, Cilium)
+- `/opt/cni/bin` - Compatibility symlink to `/var/lib/cni/bin`
+
+The dual-path approach allows:
+- System updates to manage base CNI plugins
+- CNI installers (like Flannel DaemonSet) to add plugins to writable location
+- Legacy tools expecting `/opt/cni/bin` to work via symlink
 
 Configuration applied via KIWI `config.sh` during image build, triggered by profile name matching `*K8s*`.
 
