@@ -5,6 +5,11 @@ version = 2
 
 [plugins]
   [plugins.'io.containerd.cri.v1.runtime']
+    # Enable device ownership from security context
+    # This allows non-root containers (like KubeVirt VMs) to access block devices
+    # Required for volumeMode: Block with Ceph RBD in KubeVirt
+    device_ownership_from_security_context = true
+
     [plugins.'io.containerd.cri.v1.runtime'.cni]
       # bin_dir is deprecated in v2, use bin_dirs
       bin_dir = ""
