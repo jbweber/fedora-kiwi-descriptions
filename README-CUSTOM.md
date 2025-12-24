@@ -98,9 +98,65 @@ The final qcow2 image will be ready to use in your cloud environment.
 
 ## Branch Strategy
 
-- `f43-custom` - Fedora 43 with our customizations
-- Track upstream `f43` branch from fedora-kiwi-descriptions
-- Rebase periodically to get upstream updates
+- `f43` - Tracks upstream fedora-kiwi-descriptions
+- `f43-custom` - Fedora 43 with our customizations rebased on `f43`
+
+### Syncing with Upstream
+
+We use **rebase** (not merge) to keep our custom changes as a clean set of commits on top of upstream. This makes it easy to see exactly what we've changed and simplifies contributing patches back upstream.
+
+#### Initial Setup (one time)
+
+Add the upstream remote:
+
+```bash
+git remote add upstream https://pagure.io/fedora-kiwi-descriptions.git
+```
+
+#### Rebasing on Upstream
+
+When upstream has new changes you want to incorporate:
+
+```bash
+# Fetch latest from upstream
+git fetch upstream
+
+# Update local f43 to match upstream
+git checkout f43
+git reset --hard upstream/43
+
+# Rebase custom changes onto updated f43
+git checkout f43-custom
+git rebase f43
+```
+
+If there are conflicts during rebase:
+
+1. Resolve conflicts in each file
+2. `git add <resolved-files>`
+3. `git rebase --continue`
+4. Repeat until rebase completes
+
+#### Pushing After Rebase
+
+Since rebase rewrites history, you'll need to force push:
+
+```bash
+# Update origin's f43 branch
+git push origin f43 --force-with-lease
+
+# Update origin's f43-custom branch
+git push origin f43-custom --force-with-lease
+```
+
+Use `--force-with-lease` instead of `--force` as a safety check—it will fail if someone else pushed changes you don't have.
+
+#### Why Rebase Instead of Merge?
+
+- **Clean history**: Our commits appear as a linear series on top of upstream
+- **Easy to review**: `git log f43..f43-custom` shows exactly our changes
+- **Upstream-friendly**: Individual commits can be cherry-picked or submitted as patches
+- **No merge noise**: Avoids "Merge branch 'f43' into f43-custom" commits cluttering history
 
 ## Development Notes
 
